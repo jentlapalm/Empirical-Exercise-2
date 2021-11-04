@@ -9,9 +9,9 @@ library(tidyverse)
 library(stringr)
 
 # home wd
-setwd("C:\\Users\\Jent\\Documents\\College\\Emory\\Social Network Analytics\\EE#2")
+# setwd("C:\\Users\\Jent\\Documents\\College\\Emory\\Social Network Analytics\\EE#2")
 # school wd
-# setwd("C:\\Users\\jentl\\Documents\\Emory\\Fall 2021\\Social Network Analytics\\EE#2")
+setwd("C:\\Users\\jentl\\Documents\\Emory\\Fall 2021\\Social Network Analytics\\EE#2")
 
 f1 <- fread("Funding_events_7.14.csv")
 f2 <- read_excel("Funding_events_7.14_page2.xlsx")
@@ -86,7 +86,7 @@ network$investor_2 <- trimws(network$investor_2, which = c("left"))
 # first, get all renewal windows for all ties in network
 
 # network[,renew := NULL] #to remove a column
- 
+
 # order network by date
 network <- network[order(date)]
 
@@ -98,4 +98,15 @@ network <- network[!renew>quantile(network$renew, .9 ,na.rm=TRUE)]
 
 "QUESTION 1
 Which firm is the center of the venture capital firm network as of July 2014? Consider the most central firm to be the firm with the highest closeness centrality, as in the Hollywood Actor example."
+
+# unique ties before August 2014
+bacon <- unique(network[date<"2014-08-01",2:3])
+
+# creating igraph: my centrality values are in alphabetical order. this is strange
+# how do I fix this?
+bgraph <- graph_from_data_frame(bacon, directed=F)
+
+most_central <- sort(closeness(bgraph), decreasing=T) 
+# highest is Intel Capital with closeness of 7.946447e-07
+
 

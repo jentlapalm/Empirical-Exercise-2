@@ -12,9 +12,9 @@ library(ggplot2)
 library(ggthemes)
 
 # home wd
-setwd("C:\\Users\\Jent\\Documents\\College\\Emory\\Social Network Analytics\\EE#2")
+#setwd("C:\\Users\\Jent\\Documents\\College\\Emory\\Social Network Analytics\\EE#2")
 # school wd
-# setwd("C:\\Users\\jentl\\Documents\\Emory\\Fall 2021\\Social Network Analytics\\EE#2")
+setwd("C:\\Users\\jentl\\Documents\\Emory\\Fall 2021\\Social Network Analytics\\EE#2")
 
 f1 <- fread("Funding_events_7.14.csv")
 f2 <- read_excel("Funding_events_7.14_page2.xlsx")
@@ -113,6 +113,9 @@ Allow the network to be up dated monthly for each month in the data, adding the 
 
 Plot the average k-core of each venture capital firm in the network over time. This can be computed using the igraph function coreness. On the x-axis should be time. On the y-axis should be the highest-degree k-core each venture capital firm belongs to, averaged over all firms in the network up to that month."
 
+# calculating number of months in the data
+num_months <- interval(min(network$date),max(network$date)) %/% months(1)
+
 # x and y vectors
 
 x <- lubridate::ymd()
@@ -153,7 +156,7 @@ p in 1 to the number of nodes in the networks in the network for that month's cr
 You can exclude the very early period of the data when all of the firms have the same eigenvector centrality."
 
 # allie's advice:
-"it is taking the centrality of each month of the data and sorting it then creating [1 ..0] matrices and computing the correlation with each of those matrices where you add a 1 each time"
+"it is taking the eigen-vector centrality of each month of the data, sorting it then creating [1 ..0] vector,  computing the correlation, increase partition, and repeat"
 
 # test case before loop
 # first, choose a month. get subnet up to that month. get number of nodes/vertices (x axis). get range(concentration scores) for each partition size
@@ -164,6 +167,39 @@ testgraph <- graph_from_data_frame(test)
 num_nodes <- length(V(testgraph))
 
 
+ev <- eigen_centrality(testgraph)
+
+length(ev$vector)
+
+x=c(1:length(V(testgraph)))
+y=c()
+
+# test worked, making actual loop
+
+# making plots and saving as png's
+
+# outer loop: for each year-month
+for (year_num in 1:(num_months%/%12)){
+  subnet <- network[date %between% .(date[2],date[2]+years(year_num))]
+  enddate <- max(subnet$date)
+  subgraph <- graph_from_data_frame(subnet[,2:3])
+  ev <- eigen_centrality((subgraph))
+  y <- c()
+  p <- 1:length(ev$vector)
+# loop through length of nodes (x)
+  for (i in p) {
+# cor () eigenvectors * block matrix for partition p )
+    concentration_scores <- cor(sort(ev$vector, decreasing=T), c(rep(1,i),rep(0,length(p)-i)))
+# save range to y
+    y <- c(y,concentration_scores)
+  }
+  # create plot and save in plots folder
+  png(file=paste0("C:\\Users\\jentl\\Documents\\Emory\\Fall 2021\\Social Network Analytics\\EE#2\\Q#3_plots\\","plot",year_num,".png"),
+      width=600, height=350)
+  c_score_plot <- plot(p,y,main=paste(enddate,"Concentration Scores by Partitions"),xlab='partition size',ylab='concentration score')
+  dev.off()
+}
 
 "QUESTION #3(B)
 Provide one other piece of descriptive evidence outside of the concentration scores to support your conclusion. You can see Slide 29 of Class 4 for some examples of evidence to use."
+
